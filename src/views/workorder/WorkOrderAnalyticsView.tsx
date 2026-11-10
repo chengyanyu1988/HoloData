@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   BarChart2, TrendingUp, CheckCircle, Clock, Star, Users, 
   Search, Calendar, Filter, PieChart, Activity, ShieldCheck, Zap
@@ -24,12 +24,30 @@ export const WorkOrderAnalyticsView: React.FC = () => {
   // Filter Toolbar States matching image_89ab42e8.png
   const [orderTypeFilter, setOrderTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [startDate, setStartDate] = useState('2026/11/01');
-  const [endDate, setEndDate] = useState('2026/11/06');
+  const [startDate, setStartDate] = useState('2026-11-01');
+  const [endDate, setEndDate] = useState('2026-11-09');
 
-  // Chart Style Switcher State (User instruction: 柱状图帮我改成其他的图表样式展示)
+  const startInputRef = useRef<HTMLInputElement>(null);
+  const endInputRef = useRef<HTMLInputElement>(null);
+
+  // Chart Style Switcher State
   const [chartStyle, setChartStyle] = useState<'area' | 'donut' | 'radar'>('area');
   const [hoveredPointIndex, setHoveredPointIndex] = useState<number | null>(5);
+
+  const triggerDatePicker = (ref: React.RefObject<HTMLInputElement | null>) => {
+    if (!ref.current) return;
+    try {
+      if (typeof ref.current.showPicker === 'function') {
+        ref.current.showPicker();
+      } else {
+        ref.current.focus();
+      }
+    } catch {
+      // Cross-origin iframe fallback
+      ref.current.focus();
+      ref.current.click();
+    }
+  };
 
   const handleSearch = () => {
     alert(`已按条件更新工单统计看板：时间范围 [${startDate} ~ ${endDate}]，类型 [${orderTypeFilter}]，状态 [${statusFilter}]`);
@@ -87,14 +105,13 @@ export const WorkOrderAnalyticsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Filter Toolbar matching screenshot image_89ab42e8.png:
-          全部工单类型 | 全部状态 | 2026/11/01 📅 - 2026/11/06 📅 | 搜索 */}
+      {/* Filter Toolbar matching screenshot image_89ab42e8.png */}
       <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center gap-4 text-xs font-mono">
         {/* Dropdown 1: 全部工单类型 */}
         <select
           value={orderTypeFilter}
           onChange={(e) => setOrderTypeFilter(e.target.value)}
-          className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-sans"
+          className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-sans cursor-pointer"
         >
           <option value="all">全部工单类型</option>
           <option value="硬件故障报修">硬件故障报修</option>
@@ -108,7 +125,7 @@ export const WorkOrderAnalyticsView: React.FC = () => {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-sans"
+          className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-sans cursor-pointer"
         >
           <option value="all">全部状态</option>
           <option value="待分析">待分析</option>
@@ -118,33 +135,84 @@ export const WorkOrderAnalyticsView: React.FC = () => {
           <option value="已完成">已完成</option>
         </select>
 
-        {/* Date Range Picker */}
-        <div className="flex items-center gap-2">
-          <div className="relative">
+        {/* Date Range Picker (自主选择时间) */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-slate-400 font-sans text-xs">时间范围:</span>
+          <div className="relative flex items-center">
             <input
-              type="text"
+              ref={startInputRef}
+              type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded-lg pl-3 pr-8 py-1.5 text-xs text-slate-200 w-32 focus:outline-none focus:border-cyan-500 font-mono"
+              className="bg-slate-950 border border-slate-800 rounded-lg pl-3 pr-8 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono [color-scheme:dark] cursor-pointer"
             />
-            <Calendar className="w-3.5 h-3.5 absolute right-2.5 top-2.5 text-slate-500 pointer-events-none" />
+            <button
+              type="button"
+              onClick={() => triggerDatePicker(startInputRef)}
+              className="absolute right-2.5 text-slate-400 hover:text-cyan-400 p-0.5 rounded transition-colors"
+              title="点击选择日期"
+            >
+              <Calendar className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <span className="text-slate-500">-</span>
-          <div className="relative">
+          <span className="text-slate-500 font-mono">至</span>
+          <div className="relative flex items-center">
             <input
-              type="text"
+              ref={endInputRef}
+              type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded-lg pl-3 pr-8 py-1.5 text-xs text-slate-200 w-32 focus:outline-none focus:border-cyan-500 font-mono"
+              className="bg-slate-950 border border-slate-800 rounded-lg pl-3 pr-8 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono [color-scheme:dark] cursor-pointer"
             />
-            <Calendar className="w-3.5 h-3.5 absolute right-2.5 top-2.5 text-slate-500 pointer-events-none" />
+            <button
+              type="button"
+              onClick={() => triggerDatePicker(endInputRef)}
+              className="absolute right-2.5 text-slate-400 hover:text-cyan-400 p-0.5 rounded transition-colors"
+              title="点击选择日期"
+            >
+              <Calendar className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Preset Buttons */}
+          <div className="flex items-center gap-1.5 ml-1">
+            <button
+              type="button"
+              onClick={() => {
+                setStartDate('2026-11-03');
+                setEndDate('2026-11-09');
+              }}
+              className="px-2.5 py-1 rounded bg-slate-950 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 hover:text-cyan-400 font-sans transition-colors"
+            >
+              近7天
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStartDate('2026-10-10');
+                setEndDate('2026-11-09');
+              }}
+              className="px-2.5 py-1 rounded bg-slate-950 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 hover:text-cyan-400 font-sans transition-colors"
+            >
+              近30天
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStartDate('2026-11-01');
+                setEndDate('2026-11-30');
+              }}
+              className="px-2.5 py-1 rounded bg-slate-950 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 hover:text-cyan-400 font-sans transition-colors"
+            >
+              本月
+            </button>
           </div>
         </div>
 
         {/* Search Button */}
         <button
           onClick={handleSearch}
-          className="px-5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs font-sans transition-colors flex items-center gap-1.5"
+          className="px-5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs font-sans transition-colors flex items-center gap-1.5 ml-auto sm:ml-0"
         >
           <Search className="w-3.5 h-3.5" />
           <span>搜索</span>
@@ -165,7 +233,7 @@ export const WorkOrderAnalyticsView: React.FC = () => {
               </h3>
             </div>
             <p className="text-xs text-slate-400">
-              {chartStyle === 'area' && '展现近期（2026/11/01 - 2026/11/06）工单处置结案与积压演进脉络'}
+              {chartStyle === 'area' && `展现区间 [${startDate} ~ ${endDate}] 工单处置结案与积压演进脉络`}
               {chartStyle === 'donut' && '分析不同业务组件及工单类型的分布权重，预防特定模块单点故障'}
               {chartStyle === 'radar' && '评估首响速度、解决效率、一次修复率及满意度 5 大维度'}
             </p>
@@ -188,7 +256,7 @@ export const WorkOrderAnalyticsView: React.FC = () => {
           <div className="space-y-4">
             <div className="text-[11px] font-mono text-slate-500 flex justify-between">
               <span>单位: (条)</span>
-              <span>时间节点: 2026/11/01 ~ 2026/11/06</span>
+              <span>时间节点: {startDate} ~ {endDate}</span>
             </div>
 
             {/* SVG Area Chart Element */}

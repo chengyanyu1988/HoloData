@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   FileText, Search, Calendar, Download, Eye, BookOpen, 
   CheckCircle2, X, AlertCircle, ChevronLeft, ChevronRight, Check,
@@ -548,9 +548,27 @@ export const ChangeReviewManagerView: React.FC = () => {
   const [changeList, setChangeList] = useState<ChangeReviewItem[]>(INITIAL_CHANGE_REVIEWS);
 
   // Filter toolbar states matching image_65154712.png
-  const [startDate, setStartDate] = useState('2026/11/01');
-  const [endDate, setEndDate] = useState('2026/11/06');
+  const [startDate, setStartDate] = useState('2026-11-01');
+  const [endDate, setEndDate] = useState('2026-11-09');
   const [searchKeyword, setSearchKeyword] = useState('');
+
+  const startInputRef = useRef<HTMLInputElement>(null);
+  const endInputRef = useRef<HTMLInputElement>(null);
+
+  const triggerDatePicker = (ref: React.RefObject<HTMLInputElement | null>) => {
+    if (!ref.current) return;
+    try {
+      if (typeof ref.current.showPicker === 'function') {
+        ref.current.showPicker();
+      } else {
+        ref.current.focus();
+      }
+    } catch {
+      // Cross-origin iframe fallback
+      ref.current.focus();
+      ref.current.click();
+    }
+  };
 
   // Pagination states (Per user prompt discipline: 每页显示10条数据)
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -673,26 +691,76 @@ export const ChangeReviewManagerView: React.FC = () => {
 
         {/* Filter Toolbar matching screenshot image_65154712.png */}
         <div className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 flex flex-wrap items-center gap-4 text-xs font-mono">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-slate-400 font-sans">期望时间范围:</span>
-            <div className="relative">
+            <div className="relative flex items-center">
               <input
-                type="text"
+                ref={startInputRef}
+                type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-slate-900 border border-slate-800 rounded-lg pl-3 pr-8 py-1.5 text-xs text-slate-200 w-32 focus:outline-none focus:border-cyan-500 font-mono"
+                className="bg-slate-900 border border-slate-800 rounded-lg pl-3 pr-8 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono [color-scheme:dark] cursor-pointer"
               />
-              <Calendar className="w-3.5 h-3.5 absolute right-2.5 top-2.5 text-slate-500 pointer-events-none" />
+              <button
+                type="button"
+                onClick={() => triggerDatePicker(startInputRef)}
+                className="absolute right-2.5 text-slate-400 hover:text-cyan-400 p-0.5 rounded transition-colors"
+                title="点击选择日期"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <span className="text-slate-500">-</span>
-            <div className="relative">
+            <span className="text-slate-500 font-mono">至</span>
+            <div className="relative flex items-center">
               <input
-                type="text"
+                ref={endInputRef}
+                type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-slate-900 border border-slate-800 rounded-lg pl-3 pr-8 py-1.5 text-xs text-slate-200 w-32 focus:outline-none focus:border-cyan-500 font-mono"
+                className="bg-slate-900 border border-slate-800 rounded-lg pl-3 pr-8 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono [color-scheme:dark] cursor-pointer"
               />
-              <Calendar className="w-3.5 h-3.5 absolute right-2.5 top-2.5 text-slate-500 pointer-events-none" />
+              <button
+                type="button"
+                onClick={() => triggerDatePicker(endInputRef)}
+                className="absolute right-2.5 text-slate-400 hover:text-cyan-400 p-0.5 rounded transition-colors"
+                title="点击选择日期"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Quick Presets */}
+            <div className="flex items-center gap-1.5 ml-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setStartDate('2026-11-03');
+                  setEndDate('2026-11-09');
+                }}
+                className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 hover:text-cyan-400 font-sans transition-colors"
+              >
+                近7天
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStartDate('2026-10-10');
+                  setEndDate('2026-11-09');
+                }}
+                className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 hover:text-cyan-400 font-sans transition-colors"
+              >
+                近30天
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStartDate('2026-11-01');
+                  setEndDate('2026-11-30');
+                }}
+                className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 hover:text-cyan-400 font-sans transition-colors"
+              >
+                本月
+              </button>
             </div>
           </div>
 
