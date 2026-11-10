@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ContainerWorkload } from '../../types';
 import {
   Boxes, Box, Search, RefreshCw, ChevronRight, Activity, Cpu,
@@ -42,9 +42,9 @@ const CONTAINER_MONITOR_DATA: ContainerDetailItem[] = [
   {
     id: 'cnt-01',
     name: 'hologram-k8s-pod-01',
-    containerId: 'cnt-20261105-8842',
-    startTime: '2026-11-01 08:30:00',
-    uptime: '4天 14小时 06分',
+    containerId: 'cnt-20261109-8842',
+    startTime: '2026-11-06 08:30:00',
+    uptime: '3天 08小时 40分',
     namespace: 'hologram-prod',
     ip: '10.244.1.42',
     image: 'registry.hologram.io/core/gateway:v2.4.1',
@@ -65,9 +65,9 @@ const CONTAINER_MONITOR_DATA: ContainerDetailItem[] = [
   {
     id: 'cnt-02',
     name: 'hologram-etl-spark-01',
-    containerId: 'cnt-20261105-9912',
-    startTime: '2026-10-28 14:15:00',
-    uptime: '8天 08小时 21分',
+    containerId: 'cnt-20261109-9912',
+    startTime: '2026-11-07 14:15:00',
+    uptime: '2天 02小时 55分',
     namespace: 'hologram-ai',
     ip: '10.244.2.18',
     image: 'registry.hologram.io/ai/spark-master:3.5.0',
@@ -88,9 +88,9 @@ const CONTAINER_MONITOR_DATA: ContainerDetailItem[] = [
   {
     id: 'cnt-03',
     name: 'clickhouse-shard-01-replica-0',
-    containerId: 'cnt-20261105-3304',
-    startTime: '2026-11-03 10:00:00',
-    uptime: '2天 12小时 36分',
+    containerId: 'cnt-20261109-3304',
+    startTime: '2026-11-08 10:00:00',
+    uptime: '1天 07小时 10分',
     namespace: 'hologram-middleware',
     ip: '10.244.3.92',
     image: 'registry.hologram.io/db/clickhouse:24.3-lts',
@@ -120,6 +120,12 @@ export const ContainerMonitorView: React.FC<Props> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedId, setSelectedId] = useState<string>('cnt-01');
 
+  useEffect(() => {
+    if (initialSubTab) {
+      setActiveSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
+
   const selectedItem = CONTAINER_MONITOR_DATA.find(c => c.id === selectedId) || CONTAINER_MONITOR_DATA[0];
 
   const filteredItems = CONTAINER_MONITOR_DATA.filter(item =>
@@ -137,36 +143,17 @@ export const ContainerMonitorView: React.FC<Props> = ({
           </span>
           <span className="text-cyan-400 font-semibold">集中监控</span>
           <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-          <span className="text-slate-100 font-bold">容器监控</span>
+          <span className="text-slate-400">容器监控</span>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
+          <span className="text-slate-100 font-bold">
+            {activeSubTab === 'stats' ? '监控统计' : '监控数据'}
+          </span>
           <span className="ml-2 text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
-            近期采样时间: 2026-11-05 (近期实时)
+            近期采样时间: 2026-11-09 (近期实时)
           </span>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-1 text-xs font-mono">
-            <button
-              onClick={() => setActiveSubTab('data')}
-              className={`px-3 py-1 rounded transition-colors ${
-                activeSubTab === 'data'
-                  ? 'bg-blue-600 text-white font-medium'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              监控数据
-            </button>
-            <button
-              onClick={() => setActiveSubTab('stats')}
-              className={`px-3 py-1 rounded transition-colors ${
-                activeSubTab === 'stats'
-                  ? 'bg-blue-600 text-white font-medium'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              监控统计
-            </button>
-          </div>
-
           {onRefresh && (
             <button
               onClick={onRefresh}
